@@ -1,0 +1,28 @@
+name: Daily Intel
+
+on:
+  schedule:
+    - cron: '30 0 * * *'   # 6:00 AM IST daily
+  workflow_dispatch:         # manual trigger from GitHub mobile app
+
+jobs:
+  run-intel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install surge
+        run: npm install -g surge
+
+      - name: Run daily intel
+        env:
+          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SURGE_DOMAIN: ${{ secrets.SURGE_DOMAIN }}
+          SURGE_LOGIN: ${{ secrets.SURGE_LOGIN }}
+          SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
+        run: node run.js
