@@ -16,7 +16,7 @@ if (fs.existsSync(envFile)) {
 const FIRECRAWL_KEY = process.env.FIRECRAWL_API_KEY;
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 const SURGE_DOMAIN = process.env.SURGE_DOMAIN;
-const DEPLOY_DIR = process.env.DEPLOY_DIR;
+const DEPLOY_DIR = process.env.DEPLOY_DIR || path.join(__dirname, 'dist');
 
 // ─── Date ─────────────────────────────────────────────────────────────────────
 const today = new Date();
