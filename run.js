@@ -68,6 +68,7 @@ You are the Tactical Intelligence Chief for Trend Spider. Convert geopolitical a
 - Output ONLY a complete standalone HTML file. Nothing else. No explanation, no markdown fences.
 - Start with <!DOCTYPE html>. End with </html>.
 - Use Tailwind CDN: <script src="https://cdn.tailwindcss.com"></script>
+- Always include this analytics tag in <head>: <script defer src="https://cloud.umami.is/script.js" data-website-id="dd948ed2-d6d4-4ed9-9f70-d3a15cca6ed7"></script>
 - Pure HTML — no React JSX, no build step required.
 
 ━━━ SECTIONS (IN ORDER) ━━━
@@ -267,6 +268,7 @@ async function generateHTML(newsData) {
   // Strip markdown fences if Gemini wraps output
   html = html.replace(/^```html\s*/i, '').replace(/\s*```$/, '').trim();
   if (!html.startsWith('<!DOCTYPE')) throw new Error('Gemini did not return valid HTML');
+
 
   log('HTML generated.');
   return html;
