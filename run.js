@@ -23,38 +23,85 @@ const today = new Date();
 const DATE_STR = `${String(today.getDate()).padStart(2,'0')}.${String(today.getMonth()+1).padStart(2,'0')}.${today.getFullYear()}`;
 
 // ─── Firecrawl ────────────────────────────────────────────────────────────────
+const GITHUB_ITEM_SCHEMA = { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] };
+
 const FIRECRAWL_PAYLOAD = {
-  prompt: "Extract headlines and key highlights from the lead paragraphs of major financial news sites including Bloomberg.com, FT.com, MoneyControl.com, EconomicTimes.com, Mint.com, and LiveMint.com. Additionally, identify and extract news from leading financial sites in Japan, the Middle East (Dubai, Saudi Arabia), Israel, Europe (London, Germany, France, Norway, Switzerland), Canada, and the UK. Use the gathered data to generate a 20-point strategic summary covering current events, market impacts, sector shifts, game theory predictions for stock and industry moves, and assumptions regarding commodities, crypto, repo rates, and potential socio-economic risks.",
+  prompt: "Extract headlines and key highlights from the lead paragraphs of major financial news sites including Bloomberg.com, FT.com, MoneyControl.com, EconomicTimes.com, Mint.com, and LiveMint.com. Additionally, identify and extract news from leading financial sites in Japan, the Middle East (Dubai, Saudi Arabia), Israel, Europe (London, Germany, France, Norway, Switzerland), Canada, and the UK. Also crawl GitHub: (1) github.com/trending — capture the top 10 trending repositories today with their description, language, and star count; (2) github.blog — extract the 3 most recent official GitHub blog post titles and summaries; (3) notable new releases from major open-source projects (e.g. Linux kernel, React, Python, Kubernetes, LLM frameworks). Use all gathered data to generate a 20-point strategic summary covering current events, market impacts, sector shifts, game theory predictions for stock and industry moves, assumptions regarding commodities, crypto, repo rates, potential socio-economic risks, and technology/AI/open-source signals from GitHub.",
   model: "spark-1-mini",
   schema: {
     type: "object",
     properties: {
       strategic_summary: { type: "string" },
       strategic_summary_citation: { type: "string" },
+      github: {
+        type: "object",
+        properties: {
+          trending_repos: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                url: { type: "string" },
+                description: { type: "string" },
+                language: { type: "string" },
+                stars_today: { type: "string" }
+              },
+              required: ["name","url","description","language","stars_today"]
+            }
+          },
+          blog_posts: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string" },
+                url: { type: "string" },
+                summary: { type: "string" }
+              },
+              required: ["title","url","summary"]
+            }
+          },
+          notable_releases: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                project: { type: "string" },
+                version: { type: "string" },
+                url: { type: "string" },
+                highlights: { type: "string" }
+              },
+              required: ["project","version","url","highlights"]
+            }
+          }
+        },
+        required: ["trending_repos","blog_posts","notable_releases"]
+      },
       news_sources: {
         type: "object",
         properties: {
-          bloomberg_com: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] } },
-          ft_com: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] } },
-          moneycontrol_com: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] } },
-          economictimes_com: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] } },
-          mint_com: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] } },
-          livemint_com: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] } },
-          china: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] } },
-          singapore: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] } },
-          hong_kong: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] } },
-          japan: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] } },
-          india: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] } },
-          middle_east: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] } },
-          israel: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] } },
-          europe: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] } },
-          canada: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] } },
-          uk: { type: "array", items: { type: "object", properties: { headline: { type: "string" }, headline_citation: { type: "string" }, key_highlights: { type: "string" }, key_highlights_citation: { type: "string" } }, required: ["headline","headline_citation","key_highlights","key_highlights_citation"] } }
+          bloomberg_com: { type: "array", items: GITHUB_ITEM_SCHEMA },
+          ft_com: { type: "array", items: GITHUB_ITEM_SCHEMA },
+          moneycontrol_com: { type: "array", items: GITHUB_ITEM_SCHEMA },
+          economictimes_com: { type: "array", items: GITHUB_ITEM_SCHEMA },
+          mint_com: { type: "array", items: GITHUB_ITEM_SCHEMA },
+          livemint_com: { type: "array", items: GITHUB_ITEM_SCHEMA },
+          china: { type: "array", items: GITHUB_ITEM_SCHEMA },
+          singapore: { type: "array", items: GITHUB_ITEM_SCHEMA },
+          hong_kong: { type: "array", items: GITHUB_ITEM_SCHEMA },
+          japan: { type: "array", items: GITHUB_ITEM_SCHEMA },
+          india: { type: "array", items: GITHUB_ITEM_SCHEMA },
+          middle_east: { type: "array", items: GITHUB_ITEM_SCHEMA },
+          israel: { type: "array", items: GITHUB_ITEM_SCHEMA },
+          europe: { type: "array", items: GITHUB_ITEM_SCHEMA },
+          canada: { type: "array", items: GITHUB_ITEM_SCHEMA },
+          uk: { type: "array", items: GITHUB_ITEM_SCHEMA }
         },
         required: ["bloomberg_com","ft_com","moneycontrol_com","economictimes_com","mint_com","livemint_com","china","singapore","hong_kong","japan","india","middle_east","israel","europe","canada","uk"]
       }
     },
-    required: ["strategic_summary","strategic_summary_citation","news_sources"]
+    required: ["strategic_summary","strategic_summary_citation","github","news_sources"]
   }
 };
 
@@ -148,11 +195,20 @@ You are the Tactical Intelligence Chief for Trend Spider. Convert geopolitical a
    - MOVE A: border-l-2 border-red-500 — label text-red-500
    - MOVE B: border-l-2 border-zinc-700 — label text-zinc-500
 
-7. NEXT ACTIONABLE STEPS
+7. GITHUB TECH SIGNALS
+   - Section label: "GITHUB SIGNALS" — text-[10px] font-mono text-zinc-500 tracking-widest uppercase px-6 pt-6 pb-2
+   - GitHub SVG icon (inline, 14x14, text-zinc-400) next to label
+   - THREE subsections, each in bg-zinc-900/30 border border-zinc-900 rounded p-4 mx-4 mb-3:
+     a) TRENDING (top 5 repos): each row = repo name (text-zinc-200 font-mono text-xs) + stars_today (text-yellow-500 text-[10px]) + description (text-zinc-500 text-[10px] truncate) — link the repo name to its URL
+     b) BLOG (latest posts): each row = title as text-zinc-300 text-xs font-medium, summary as text-zinc-500 text-[10px] — link title to URL
+     c) RELEASES: each row = project + version badge (bg-zinc-800 text-zinc-300 font-mono text-[9px] px-1 rounded) + highlights (text-zinc-500 text-[10px])
+   - All links: target="_blank" rel="noopener" class="hover:text-zinc-100 transition-colors"
+
+8. NEXT ACTIONABLE STEPS
    - 2-column grid: "Asset Allocation" | "Infrastructure"
    - bg-zinc-900/50 p-4 rounded border border-zinc-800
 
-8. FOOTER
+9. FOOTER
    - Exactly: "Santosh P : Trend Spider" — text-zinc-500 font-bold text-sm uppercase
 
 ━━━ CSS CLASSES (embed in <style>) ━━━
@@ -170,6 +226,13 @@ body { background-color:#000; color:#f4f4f5; font-family:ui-sans-serif,system-ui
 .visual-lexicon { width:32px; height:32px; color:#52525b; flex-shrink:0; }
 .card-container { border:1px solid #18181b; background-color:#09090b; padding:1rem; border-radius:4px; display:flex; gap:1rem; align-items:flex-start; }
 \`\`\`
+
+━━━ GITHUB DATA PROTOCOL ━━━
+- The JSON input contains a "github" key with three arrays: trending_repos, blog_posts, notable_releases.
+- trending_repos items have: name, url, description, language, stars_today
+- blog_posts items have: title, url, summary
+- notable_releases items have: project, version, url, highlights
+- If any array is empty or absent, skip that subsection gracefully (no empty boxes).
 
 ━━━ LANGUAGE PROTOCOL ━━━
 - NPC → "Government-led mandate" | PBoC → "Central Bank" | CBDC → "Digital Currency" | FDI → "Foreign Investment"
